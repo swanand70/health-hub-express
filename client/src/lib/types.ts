@@ -1,17 +1,13 @@
-export interface User {
+export interface Product {
   id: string;
-  role: 'customer' | 'owner';
-  username: string;
-  password: string;
-  fullName: string;
-  phone: string;
-  address: string;
-  // Customer-specific
-  dob?: string;
-  gender?: string;
-  // Owner-specific
+  _id?: string;
+  name: string;
+  description?: string;
+  category?: 'otc' | 'prescription' | 'wellness';
+  price: number;
+  quantity?: number;
+  prescriptionRequired?: boolean;
   pharmacyId?: string;
-  licenseNumber?: string;
 }
 
 export interface Pharmacy {
@@ -21,18 +17,6 @@ export interface Pharmacy {
   phone: string;
   ownerId: string;
   licenseNumber: string;
-}
-
-export interface Product {
-  id: string;
-  pharmacyId: string;
-  name: string;
-  description: string;
-  category: 'otc' | 'prescription' | 'wellness';
-  price: number;
-  quantity: number;
-  prescriptionRequired: boolean;
-  image?: string;
 }
 
 export interface CartItem {

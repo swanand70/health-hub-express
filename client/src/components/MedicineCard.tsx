@@ -19,9 +19,12 @@ export default function MedicineCard({ product, onAddToCart, showActions = true 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-shadow duration-200 flex flex-col">
       <div className="flex items-start justify-between mb-2">
-        <Badge className={categoryColors[product.category] + ' border-0 text-xs'}>
-          {product.category.toUpperCase()}
+        <Badge
+          className={(categoryColors[product.category ?? ""] || "bg-gray-100 text-gray-600") + " border-0 text-xs"}
+        >
+          {product.category ? product.category.toUpperCase() : "MED"}
         </Badge>
+
         {product.prescriptionRequired && (
           <Badge className="bg-red-100 text-red-600 border-0 text-xs">
             <AlertTriangle className="h-3 w-3 mr-1" /> Rx Required
@@ -52,9 +55,12 @@ export default function MedicineCard({ product, onAddToCart, showActions = true 
         )}
       </div>
 
-      {product.quantity < 10 && (
-        <p className="text-xs text-red-500 mt-2">⚠ Only {product.quantity} left</p>
+      {product.quantity !== undefined && product.quantity < 10 && (
+        <p className="text-xs text-red-500 mt-2">
+          ⚠ Only {product.quantity} left
+        </p>
       )}
+
     </div>
   );
 }

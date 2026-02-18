@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CustomerSidebar from '@/components/CustomerSidebar';
 import BrowseMedicines from './BrowseMedicines';
 import Cart from './Cart';
@@ -22,15 +22,27 @@ export default function CustomerDashboard() {
 
   const addToCart = (product: any) => {
     const cart = getCart();
-    const existing = cart.find(c => c.productId === product.id);
+
+    const productId = product.id || product._id;
+
+    const existing = cart.find(c => c.productId === productId);
+
     if (existing) {
       existing.quantity += 1;
     } else {
-      cart.push({ productId: product.id, pharmacyId: product.pharmacyId, quantity: 1 });
+      cart.push({
+        productId: productId,
+        pharmacyId: product.pharmacyId || "default",
+        quantity: 1
+      });
     }
+
     saveCart(cart);
     toast.success(`${product.name} added to cart`);
   };
+
+
+
 
   const renderPage = () => {
     switch (page) {
@@ -54,7 +66,10 @@ export default function CustomerDashboard() {
               <h2 className="text-lg font-semibold text-gray-800">Featured Medicines</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featured.map(p => <MedicineCard key={p.id} product={p} onAddToCart={addToCart} />)}
+              {featured.map(p => (
+                <MedicineCard key={p.id || p._id} product={p} onAddToCart={addToCart} />
+              ))}
+
             </div>
           </div>
 

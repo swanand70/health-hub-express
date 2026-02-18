@@ -3,14 +3,7 @@ import MedicineCard from "@/components/MedicineCard";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
-
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  description?: string;
-  category?: string;
-}
+import { Product } from "@/lib/types";
 
 interface Props {
   onAddToCart: (p: Product) => void;
@@ -25,11 +18,15 @@ export default function BrowseMedicines({ onAddToCart }: Props) {
     fetch("http://localhost:5000/api/medicines")
       .then(res => res.json())
       .then(data => {
-        console.log("Medicines:", data);
-        setProducts(data);
+        const normalized = data.map((p: any) => ({
+          ...p,
+          id: p._id   // convert Mongo _id → id
+        }));
+        setProducts(normalized);
       })
       .catch(err => console.log(err));
   }, []);
+
 
   const filtered = products.filter(p => {
     const matchSearch =
@@ -37,7 +34,8 @@ export default function BrowseMedicines({ onAddToCart }: Props) {
       (p.description || "").toLowerCase().includes(search.toLowerCase());
 
     const matchCategory =
-      category === "all" || p.category === category;
+      category === "all" ||
+      p.category?.toLowerCase() === category.toLowerCase();
 
     return matchSearch && matchCategory;
   });
@@ -67,7 +65,7 @@ export default function BrowseMedicines({ onAddToCart }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filtered.map(p => (
-          <MedicineCard key={p._id} product={p} onAddToCart={onAddToCart} />
+          <MedicineCard key={p.id} product={p} onAddToCart={onAddToCart} />
         ))}
       </div>
 

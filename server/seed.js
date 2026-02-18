@@ -30,6 +30,27 @@ mongoose.connect(process.env.MONGO_URI).then(async () => {
             quantity: 50,
             description: "Antibiotic",
         },
+        {
+            name: "Relent",
+            category: "prescription",
+            price: 140,
+            quantity: 40,
+            description: "Antibiotic"
+        },
+        {
+            name: "Vitamin D",
+            category: "wellness",
+            price: 80,
+            quantity: 40,
+            description: "Bone health supplement"
+        },
+        {
+            name: "Augmentin",
+            category: "prescription",
+            price: 120,
+            quantity: 25,
+            description: "Antibiotic"
+        }
     ]);
 
     console.log("Medicines added");
