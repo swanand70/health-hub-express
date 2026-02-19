@@ -5,11 +5,25 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
+
 export default function Cart() {
   const { user } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/medicines")
+      .then(res => res.json())
+      .then(data => {
+        const normalized = data.map((p: any) => ({
+          ...p,
+          id: p._id
+        }));
+        setProducts(normalized);
+      });
+  }, []);
+
   const [cart, setCartState] = useState(getCart());
   const [deliveryMethod, setDeliveryMethod] = useState<'delivery' | 'pickup'>('delivery');
-  const products = getProducts();
   const pharmacies = getPharmacies();
 
   const cartWithDetails = cart.map(item => {
@@ -118,9 +132,8 @@ export default function Cart() {
             <button
               key={m}
               onClick={() => setDeliveryMethod(m)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                deliveryMethod === m ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${deliveryMethod === m ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
             >
               {m === 'delivery' ? '🚚 Home Delivery' : '🏪 Store Pickup'}
             </button>
