@@ -1,3 +1,19 @@
+export interface User {
+  id: string;
+  role: 'customer' | 'owner';
+  username: string;
+  password: string;
+  fullName: string;
+
+  // optional fields
+  phone?: string;
+  address?: string;
+  pharmacyId?: string;
+  licenseNumber?: string;
+  dob?: string;
+  gender?: string;
+}
+
 export interface Product {
   id: string;
   _id?: string;
