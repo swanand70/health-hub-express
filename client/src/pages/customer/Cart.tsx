@@ -11,7 +11,7 @@ export default function Cart() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/medicines")
+    fetch(`${import.meta.env.VITE_API_URL}/api/medicines`)
       .then(res => res.json())
       .then(data => {
         const normalized = data.map((p: any) => ({
