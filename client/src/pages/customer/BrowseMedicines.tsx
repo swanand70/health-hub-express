@@ -15,7 +15,7 @@ export default function BrowseMedicines({ onAddToCart }: Props) {
   const [category, setCategory] = useState("all");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/medicines")
+    fetch("https://health-hub-express.onrender.com/api/medicines")
       .then(res => res.json())
       .then(data => {
         const normalized = data.map((p: any) => ({
