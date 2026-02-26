@@ -1,11 +1,14 @@
 const router = require("express").Router();
 const Medicine = require("../models/Medicine");
+const auth = require("../middleware/authMiddleware");
 
-router.get("/", async (req, res) => {
+// GET all medicines (protected)
+router.get("/", auth, async (req, res) => {
     const meds = await Medicine.find();
     res.json(meds);
 });
 
+// ADD medicine
 router.post("/", async (req, res) => {
     const med = new Medicine(req.body);
     await med.save();

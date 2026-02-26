@@ -8,6 +8,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Pill, ShieldPlus } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function AuthPage() {
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -28,11 +30,33 @@ export default function AuthPage() {
   const [pharmacyName, setPharmacyName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(loginUsername, loginPassword, role);
-    if (success) toast.success('Welcome back!');
-    else toast.error('Invalid credentials');
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginUsername,
+          password: loginPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        toast.success("Logged in!");
+        window.location.href = "/";
+      } else {
+        toast.error("Invalid credentials");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
   };
 
   const handleSignup = (e: React.FormEvent) => {
