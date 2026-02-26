@@ -21,6 +21,10 @@ app.get("/", (req, res) => {
     res.send("Backend running");
 });
 
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
+
 app.use("/api/medicines", medicineRoutes);
 
 const PORT = process.env.PORT || 5000;
