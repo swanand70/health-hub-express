@@ -30,32 +30,16 @@ export default function AuthPage() {
   const [pharmacyName, setPharmacyName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: loginUsername,
-          password: loginPassword,
-        }),
-      });
+    const err = login(loginUsername, loginPassword, role);
 
-      const data = await res.json();
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        toast.success("Logged in!");
-        window.location.href = "/";
-      } else {
-        toast.error("Invalid credentials");
-      }
-    } catch (err) {
-      toast.error("Server error");
+    if (err) {
+      toast.error(err);
+    } else {
+      toast.success("Logged in!");
+      window.location.href = "/";
     }
   };
 
