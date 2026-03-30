@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const _API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const API_URL = _API.includes('/api') ? _API.replace(/\/$/, '') : `${_API.replace(/\/$/, '')}/api`;
 
 export default function Cart() {
   const { user, token } = useAuth();

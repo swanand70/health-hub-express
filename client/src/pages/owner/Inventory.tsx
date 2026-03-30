@@ -10,7 +10,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const _API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const API_URL = _API.includes('/api') ? _API.replace(/\/$/, '') : `${_API.replace(/\/$/, '')}/api`;
 
 const emptyProduct = (): Partial<Product> & { inStock?: number } => ({
   name: '', description: '', category: 'otc', price: 0, inStock: 0, prescriptionRequired: false

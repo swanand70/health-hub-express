@@ -11,12 +11,13 @@ import { getCart, saveCart } from '@/lib/storage';
 import { toast } from 'sonner';
 import { MapPin, Pill, TrendingUp } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const _API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
+const API_URL = _API.includes('/api') ? _API.replace(/\/$/, '') : `${_API.replace(/\/$/, '')}/api`;
 
 export default function CustomerDashboard() {
   const [page, setPage] = useState('home');
   const { user } = useAuth();
-  
+
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [pharmacies, setPharmacies] = useState<any[]>([]);
 
@@ -25,17 +26,17 @@ export default function CustomerDashboard() {
       .then(res => res.json())
       .then(data => {
         setAllProducts(data);
-        
+
         // Extract unique pharmacies from the populated medicine data
         const uniquePharmacies = new Map();
         data.forEach((med: any) => {
-            if (med.pharmacy && !uniquePharmacies.has(med.pharmacy._id)) {
-                uniquePharmacies.set(med.pharmacy._id, {
-                    id: med.pharmacy._id,
-                    name: med.pharmacy.pharmacyName || med.pharmacy.name || 'Unknown',
-                    address: med.pharmacy.address || 'Address not listed'
-                });
-            }
+          if (med.pharmacy && !uniquePharmacies.has(med.pharmacy._id)) {
+            uniquePharmacies.set(med.pharmacy._id, {
+              id: med.pharmacy._id,
+              name: med.pharmacy.pharmacyName || med.pharmacy.name || 'Unknown',
+              address: med.pharmacy.address || 'Address not listed'
+            });
+          }
         });
         setPharmacies(Array.from(uniquePharmacies.values()));
       })
