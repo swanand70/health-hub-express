@@ -5,34 +5,56 @@ import Cart from './Cart';
 import CustomerOrders from './Orders';
 import UploadPrescription from './UploadPrescription';
 import CustomerProfile from './Profile';
-import { getPharmacies, getProducts } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
 import MedicineCard from '@/components/MedicineCard';
-import { CartItem } from '@/lib/types';
 import { getCart, saveCart } from '@/lib/storage';
 import { toast } from 'sonner';
 import { MapPin, Pill, TrendingUp } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export default function CustomerDashboard() {
   const [page, setPage] = useState('home');
   const { user } = useAuth();
-  const pharmacies = getPharmacies();
-  const allProducts = getProducts();
+  
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [pharmacies, setPharmacies] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/medicines`)
+      .then(res => res.json())
+      .then(data => {
+        setAllProducts(data);
+        
+        // Extract unique pharmacies from the populated medicine data
+        const uniquePharmacies = new Map();
+        data.forEach((med: any) => {
+            if (med.pharmacy && !uniquePharmacies.has(med.pharmacy._id)) {
+                uniquePharmacies.set(med.pharmacy._id, {
+                    id: med.pharmacy._id,
+                    name: med.pharmacy.pharmacyName || med.pharmacy.name || 'Unknown',
+                    address: med.pharmacy.address || 'Address not listed'
+                });
+            }
+        });
+        setPharmacies(Array.from(uniquePharmacies.values()));
+      })
+      .catch(console.error);
+  }, []);
+
   const featured = allProducts.slice(0, 4);
 
   const addToCart = (product: any) => {
     const cart = getCart();
-
     const productId = product.id || product._id;
-
-    const existing = cart.find(c => c.productId === productId);
+    const existing = cart.find((c: any) => c.productId === productId);
 
     if (existing) {
       existing.quantity += 1;
     } else {
       cart.push({
         productId: productId,
-        pharmacyId: product.pharmacyId || "default",
+        pharmacyId: product.pharmacy?._id || product.pharmacyId || "default",
         quantity: 1
       });
     }
@@ -40,9 +62,6 @@ export default function CustomerDashboard() {
     saveCart(cart);
     toast.success(`${product.name} added to cart`);
   };
-
-
-
 
   const renderPage = () => {
     switch (page) {
@@ -54,8 +73,8 @@ export default function CustomerDashboard() {
       default: return (
         <div className="p-6 space-y-6">
           {/* Welcome banner */}
-          <div className="bg-gradient-to-r from-teal-600 to-emerald-500 rounded-2xl p-6 text-white">
-            <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.fullName}! 👋</h1>
+          <div className="bg-gradient-to-r from-teal-600 to-emerald-500 rounded-2xl p-6 text-white shadow-md">
+            <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.name || user?.fullName || 'Guest'}! 👋</h1>
             <p className="text-teal-100">Order medicines, upload prescriptions, and manage your health.</p>
           </div>
 
@@ -69,15 +88,15 @@ export default function CustomerDashboard() {
               {featured.map(p => (
                 <MedicineCard key={p.id || p._id} product={p} onAddToCart={addToCart} />
               ))}
-
             </div>
+            {featured.length === 0 && <p className="text-gray-400">Loading featured catalog...</p>}
           </div>
 
           {/* Nearby pharmacies */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="h-5 w-5 text-teal-600" />
-              <h2 className="text-lg font-semibold text-gray-800">Nearby Pharmacies</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Active Pharmacies</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {pharmacies.map(ph => (
@@ -89,11 +108,11 @@ export default function CustomerDashboard() {
                     <div>
                       <h3 className="font-semibold text-gray-800">{ph.name}</h3>
                       <p className="text-sm text-gray-500">{ph.address}</p>
-                      <p className="text-xs text-gray-400">{ph.phone}</p>
                     </div>
                   </div>
                 </div>
               ))}
+              {pharmacies.length === 0 && <p className="text-gray-400">Loading active pharmacies...</p>}
             </div>
           </div>
         </div>

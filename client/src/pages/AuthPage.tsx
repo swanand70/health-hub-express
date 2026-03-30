@@ -4,53 +4,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Pill, ShieldPlus } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AuthPage() {
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [role, setRole] = useState<'customer' | 'owner'>('customer');
+  const [role, setRole] = useState<'customer' | 'pharmacist'>('customer'); // pharmacist mapping
 
   // Login state
-  const [loginUsername, setLoginUsername] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
   // Signup state
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
   const [pharmacyName, setPharmacyName] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const err = login(loginUsername, loginPassword, role);
-
-    if (err) {
-      toast.error(err);
-    } else {
-      toast.success("Logged in!");
+    const success = await login(loginEmail, loginPassword);
+    if (success) {
       window.location.href = "/";
     }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = signup(
-      { role, username, password, fullName, phone, address, dob, gender, licenseNumber },
-      role === 'owner' ? pharmacyName : undefined
-    );
-    if (err) toast.error(err);
-    else toast.success('Account created!');
+    
+    // Role needs to be specifically pharmacist to match backend logic
+    const userData = {
+      name: fullName,
+      email,
+      password,
+      role: role === 'pharmacist' ? 'pharmacist' : 'customer',
+      address
+    };
+
+    const err = await signup(userData, role === 'pharmacist' ? pharmacyName : undefined);
+    
+    if (err) {
+      toast.error(err);
+    } else {
+      toast.success('Account created! You can now log in.');
+      setMode('login');
+    }
   };
 
   return (
@@ -65,16 +66,18 @@ export default function AuthPage() {
         </CardHeader>
         <CardContent>
           {/* Role selector */}
-          <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="mb-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="customer" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white">
-                Customer
-              </TabsTrigger>
-              <TabsTrigger value="owner" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white">
-                <ShieldPlus className="mr-1 h-4 w-4" /> Pharmacy Owner
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {mode === 'signup' && (
+            <Tabs value={role} onValueChange={(v) => setRole(v as any)} className="mb-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="customer" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white">
+                  Customer
+                </TabsTrigger>
+                <TabsTrigger value="pharmacist" className="data-[state=active]:bg-teal-600 data-[state=active]:text-white">
+                  <ShieldPlus className="mr-1 h-4 w-4" /> Pharmacist
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
           {/* Login / Signup toggle */}
           <div className="flex gap-2 mb-4">
@@ -84,36 +87,20 @@ export default function AuthPage() {
 
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-3">
-              <div><Label>Username</Label><Input value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required /></div>
+              <div><Label>Email</Label><Input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required /></div>
               <div><Label>Password</Label><Input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required /></div>
-              <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700">Login as {role === 'customer' ? 'Customer' : 'Pharmacy Owner'}</Button>
-              <p className="text-xs text-center text-muted-foreground mt-2">Demo: username <strong>john</strong> / password <strong>pass123</strong> (customer) or <strong>medplus</strong> / <strong>pass123</strong> (owner)</p>
+              <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700">Login</Button>
             </form>
           ) : (
             <form onSubmit={handleSignup} className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
               <div><Label>Full Name</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} required /></div>
-              <div><Label>Username</Label><Input value={username} onChange={e => setUsername(e.target.value)} required /></div>
+              <div><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
               <div><Label>Password</Label><Input type="password" value={password} onChange={e => setPassword(e.target.value)} required /></div>
-              <div><Label>Phone</Label><Input value={phone} onChange={e => setPhone(e.target.value)} required /></div>
               <div><Label>Address</Label><Input value={address} onChange={e => setAddress(e.target.value)} required /></div>
-              {role === 'customer' && (
-                <>
-                  <div><Label>Date of Birth</Label><Input type="date" value={dob} onChange={e => setDob(e.target.value)} /></div>
-                  <div>
-                    <Label>Gender</Label>
-                    <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={gender} onChange={e => setGender(e.target.value)}>
-                      <option value="">Select</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
-              {role === 'owner' && (
+              
+              {role === 'pharmacist' && (
                 <>
                   <div><Label>Pharmacy Name</Label><Input value={pharmacyName} onChange={e => setPharmacyName(e.target.value)} required /></div>
-                  <div><Label>License Number</Label><Input value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} required /></div>
                 </>
               )}
               <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700">Create Account</Button>

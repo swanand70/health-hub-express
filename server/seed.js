@@ -1,58 +1,60 @@
-const mongoose = require("mongoose");
 require("dotenv").config();
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const User = require("./models/User");
 
-const Medicine = require("./models/Medicine");
+async function seed() {
+    try {
+        await mongoose.connect(process.env.MONGO_URI, { family: 4 });
+        console.log("Connected to MongoDB for seeding...");
 
-mongoose.connect(process.env.MONGO_URI).then(async () => {
-    console.log("MongoDB connected");
-
-    await Medicine.deleteMany();
-
-    await Medicine.insertMany([
-        {
-            name: "Crocin",
-            category: "otc",
-            price: 50,
-            quantity: 100,
-            description: "Fever and pain relief",
-        },
-        {
-            name: "Dolo 650",
-            category: "otc",
-            price: 30,
-            quantity: 200,
-            description: "Paracetamol tablet",
-        },
-        {
-            name: "Amoxicillin",
-            category: "prescription",
-            price: 120,
-            quantity: 50,
-            description: "Antibiotic",
-        },
-        {
-            name: "Relent",
-            category: "prescription",
-            price: 140,
-            quantity: 40,
-            description: "Antibiotic"
-        },
-        {
-            name: "Vitamin D",
-            category: "wellness",
-            price: 80,
-            quantity: 40,
-            description: "Bone health supplement"
-        },
-        {
-            name: "Augmentin",
-            category: "prescription",
-            price: 120,
-            quantity: 25,
-            description: "Antibiotic"
+        try {
+            await mongoose.connection.collection('users').dropIndex('username_1');
+            console.log("Dropped outdated username index.");
+        } catch (e) {
+            // ignore if it doesn't exist
         }
-    ]);
 
-    console.log("Medicines added");
-    process.exit();
-});
+        // Clear existing users to prevent duplicates during seeding
+        await User.deleteMany({});
+        console.log("Cleared existing users.");
+
+        const hashedPassword = await bcrypt.hash("password123", 10);
+
+        const users = [
+            {
+                name: "John Customer",
+                email: "customer@test.com",
+                password: hashedPassword,
+                role: "customer"
+            },
+            {
+                name: "Sarah Pharmacist",
+                email: "pharmacist@test.com",
+                password: hashedPassword,
+                role: "pharmacist",
+                pharmacyName: "Health Plus Care",
+                address: "123 Healthy Avenue, Medical District"
+            },
+            {
+                name: "David Pharmacist",
+                email: "pharma2@test.com",
+                password: hashedPassword,
+                role: "pharmacist",
+                pharmacyName: "City Core Meds",
+                address: "45 Downtown Blvd"
+            }
+        ];
+
+        await User.insertMany(users);
+        console.log("Database successfully seeded with demo accounts:");
+        users.forEach(u => console.log(`- ${u.role}: ${u.email} / password123`));
+
+        process.exit(0);
+    } catch (err) {
+        console.error("Seeding error:", err);
+        process.exit(1);
+    }
+}
+
+seed();

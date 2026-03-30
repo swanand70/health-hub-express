@@ -1,18 +1,47 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getOrdersByPharmacy, getProductsByPharmacy } from '@/lib/storage';
 import StatsCard from '@/components/StatsCard';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Analytics() {
-  const { user } = useAuth();
-  const pharmacyId = user?.pharmacyId || '';
-  const orders = getOrdersByPharmacy(pharmacyId);
-  const products = getProductsByPharmacy(pharmacyId);
+  const { token } = useAuth();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const revenue = orders.filter(o => o.status !== 'rejected').reduce((s, o) => s + o.total, 0);
-  const delivered = orders.filter(o => o.status === 'delivered').length;
-  const lowStock = products.filter(p => p.quantity < 10);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [ordersRes, productsRes] = await Promise.all([
+          fetch(`${API_URL}/orders/me`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/medicines/inventory/me`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        
+        if (ordersRes.ok && productsRes.ok) {
+          setOrders(await ordersRes.json());
+          setProducts(await productsRes.json());
+        } else {
+          toast.error("Failed to load analytics data");
+        }
+      } catch (err) {
+        toast.error("Failed to load analytics data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  if (loading) return <div className="p-6 text-gray-400">Loading analytics...</div>;
+
+  const revenue = orders.filter(o => o.status !== 'Rejected').reduce((s, o) => s + (o.totalAmount || 0), 0);
+  const delivered = orders.filter(o => o.status === 'Delivered').length;
+  const lowStock = products.filter(p => (p.inStock || 0) < 10);
 
   // Simple monthly aggregation
   const monthlyData: Record<string, number> = {};
@@ -55,9 +84,9 @@ export default function Analytics() {
           <h2 className="text-lg font-semibold text-gray-800 mb-3">⚠️ Low Stock Alerts</h2>
           <div className="space-y-2">
             {lowStock.map(p => (
-              <div key={p.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+              <div key={p._id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                 <span className="text-sm text-gray-700">{p.name}</span>
-                <span className="text-sm font-bold text-red-600">{p.quantity} remaining</span>
+                <span className="text-sm font-bold text-red-600">{p.inStock} remaining</span>
               </div>
             ))}
           </div>

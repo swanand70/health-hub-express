@@ -1,13 +1,16 @@
 export interface User {
   id: string;
-  role: 'customer' | 'owner';
-  username: string;
-  password: string;
-  fullName: string;
+  role: 'customer' | 'pharmacist';
+  email?: string;
+  username?: string; // keeping just to not break existing strict frontend code before we refactor all
+  password?: string;
+  fullName?: string;
+  name?: string;
 
   // optional fields
   phone?: string;
   address?: string;
+  pharmacyName?: string;
   pharmacyId?: string;
   licenseNumber?: string;
   dob?: string;
