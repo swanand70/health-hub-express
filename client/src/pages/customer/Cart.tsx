@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 export default function Cart() {
   const { user, token } = useAuth();
@@ -65,7 +65,7 @@ export default function Cart() {
       // Group by pharmacy because Backend schema handles 1 pharmacy per Order
       const byPharmacy: Record<string, typeof cartWithDetails> = {};
       cartWithDetails.forEach((item: any) => {
-        const pid = item.product.pharmacy?._id || item.product.pharmacy || item.pharmacyId; 
+        const pid = item.product.pharmacy?._id || item.product.pharmacy || item.pharmacyId;
         if (!byPharmacy[pid]) byPharmacy[pid] = [];
         byPharmacy[pid].push(item);
       });
@@ -83,9 +83,9 @@ export default function Cart() {
 
         return fetch(`${API_URL}/orders`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify(orderPayload)
         }).then(res => {
@@ -125,7 +125,7 @@ export default function Cart() {
         {cartWithDetails.map((item: any) => {
           const pharmacyObj = item.product.pharmacy;
           const pharmacyName = pharmacyObj?.pharmacyName || pharmacyObj?.name || 'Unknown Pharmacy';
-          
+
           return (
             <div key={item.productId} className="bg-white rounded-xl border p-4 flex items-center gap-4 shadow-sm">
               <div className="h-14 w-14 bg-teal-50 rounded-lg flex items-center justify-center text-2xl">💊</div>
@@ -148,8 +148,8 @@ export default function Cart() {
 
       <div className="mt-6 bg-white rounded-xl border p-4 shadow-sm">
         <p className="text-sm font-medium text-gray-700 mb-2">Delivery Address</p>
-        <textarea 
-          className="w-full border rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500" 
+        <textarea
+          className="w-full border rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500"
           rows={3}
           value={deliveryAddress}
           onChange={(e) => setDeliveryAddress(e.target.value)}
@@ -163,10 +163,10 @@ export default function Cart() {
           <p className="text-sm text-gray-500">Total Amount</p>
           <p className="text-2xl font-bold text-teal-700">₹{total}</p>
         </div>
-        <Button 
-            className="bg-teal-600 hover:bg-teal-700 px-8 disabled:opacity-50" 
-            onClick={checkout}
-            disabled={isCheckingOut}
+        <Button
+          className="bg-teal-600 hover:bg-teal-700 px-8 disabled:opacity-50"
+          onClick={checkout}
+          disabled={isCheckingOut}
         >
           {isCheckingOut ? 'Processing...' : 'Place Order'}
         </Button>

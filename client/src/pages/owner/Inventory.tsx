@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 const emptyProduct = (): Partial<Product> & { inStock?: number } => ({
   name: '', description: '', category: 'otc', price: 0, inStock: 0, prescriptionRequired: false
@@ -49,14 +49,14 @@ export default function Inventory() {
 
   const handleSave = async () => {
     if (!editing.name) { toast.error('Name is required'); return; }
-    
+
     try {
       const method = isEdit ? 'PUT' : 'POST';
       const url = isEdit ? `${API_URL}/medicines/${editing._id}` : `${API_URL}/medicines`;
-      
+
       const res = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
@@ -64,7 +64,7 @@ export default function Inventory() {
       });
 
       if (!res.ok) throw new Error("Failed to save product");
-      
+
       toast.success(isEdit ? 'Product updated' : 'Product added');
       setModalOpen(false);
       fetchInventory();

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User } from '@/lib/types';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 interface AuthContextType {
   user: User | null;
@@ -36,12 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-      
+
       if (!res.ok) {
         toast.error(data.message || 'Login failed');
         return false;
       }
-      
+
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setToken(data.token);
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ ...userData, pharmacyName })
       });
       const data = await res.json();
-      
+
       if (!res.ok) {
         return data.message || 'Signup failed';
       }

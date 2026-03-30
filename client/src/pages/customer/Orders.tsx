@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 const statusColors: Record<string, string> = {
   Pending: 'bg-yellow-100 text-yellow-700',
@@ -59,7 +59,7 @@ export default function CustomerOrders() {
       <div className="space-y-4">
         {orders.map(order => {
           const pharmacyName = order.pharmacy?.pharmacyName || order.pharmacy?.name || 'Unknown Pharmacy';
-          
+
           return (
             <div key={order._id} className="bg-white rounded-xl border p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
@@ -72,7 +72,7 @@ export default function CustomerOrders() {
                   <p className="text-xs text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              
+
               <div className="space-y-1 mb-3">
                 {order.items.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between text-sm">
@@ -81,15 +81,15 @@ export default function CustomerOrders() {
                   </div>
                 ))}
               </div>
-              
+
               <div className="pt-3 border-t flex justify-between items-start">
                 <div>
-                    <span className="text-sm text-gray-500 block mb-1">Delivering to:</span>
-                    <span className="text-xs font-medium text-gray-600 max-w-[200px] block">{order.deliveryAddress}</span>
+                  <span className="text-sm text-gray-500 block mb-1">Delivering to:</span>
+                  <span className="text-xs font-medium text-gray-600 max-w-[200px] block">{order.deliveryAddress}</span>
                 </div>
                 <div className="text-right">
-                    <span className="text-sm text-gray-500 block">Total</span>
-                    <span className="font-bold text-lg text-teal-700">₹{order.totalAmount}</span>
+                  <span className="text-sm text-gray-500 block">Total</span>
+                  <span className="font-bold text-lg text-teal-700">₹{order.totalAmount}</span>
                 </div>
               </div>
             </div>

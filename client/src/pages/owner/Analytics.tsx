@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { DollarSign, ShoppingCart, TrendingUp, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 export default function Analytics() {
   const { token } = useAuth();
@@ -20,7 +20,7 @@ export default function Analytics() {
           fetch(`${API_URL}/orders/me`, { headers: { Authorization: `Bearer ${token}` } }),
           fetch(`${API_URL}/medicines/inventory/me`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
-        
+
         if (ordersRes.ok && productsRes.ok) {
           setOrders(await ordersRes.json());
           setProducts(await productsRes.json());

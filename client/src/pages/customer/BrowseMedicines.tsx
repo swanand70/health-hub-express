@@ -9,7 +9,7 @@ interface Props {
   onAddToCart: (p: Product) => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 export default function BrowseMedicines({ onAddToCart }: Props) {
   const [products, setProducts] = useState<Product[]>([]);

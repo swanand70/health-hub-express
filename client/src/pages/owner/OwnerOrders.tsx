@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { Check, X, Package, Truck, Eye } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 
 const statusColors: Record<string, string> = {
   Pending: 'bg-yellow-100 text-yellow-700',
@@ -32,7 +32,7 @@ export default function OwnerOrders() {
       if (!res.ok) throw new Error("Failed to load orders");
       const data = await res.json();
       setOrders(data);
-    } catch(err) {
+    } catch (err) {
       toast.error('Could not fetch orders');
     } finally {
       setLoading(false);
@@ -47,7 +47,7 @@ export default function OwnerOrders() {
     try {
       const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
@@ -56,7 +56,7 @@ export default function OwnerOrders() {
       if (!res.ok) throw new Error("Status update failed");
       toast.success(`Order marked as ${status}`);
       fetchOrders();
-    } catch(err) {
+    } catch (err) {
       toast.error('Status update failed');
     }
   };
