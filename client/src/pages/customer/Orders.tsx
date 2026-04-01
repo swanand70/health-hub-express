@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
-import { Package } from 'lucide-react';
+import { Package, CreditCard, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const _API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
@@ -92,6 +92,31 @@ export default function CustomerOrders() {
                   <span className="text-sm text-gray-500 block">Total</span>
                   <span className="font-bold text-lg text-teal-700">₹{order.totalAmount}</span>
                 </div>
+              </div>
+
+              {/* Payment Status */}
+              <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {order.paymentStatus === 'Paid' ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-xs font-medium text-green-700">Payment Complete</span>
+                    </>
+                  ) : order.paymentId ? (
+                    <>
+                      <Clock className="h-4 w-4 text-blue-600" />
+                      <span className="text-xs font-medium text-blue-700">Processing</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 text-orange-600" />
+                      <span className="text-xs font-medium text-orange-700">Payment Pending</span>
+                    </>
+                  )}
+                </div>
+                {order.paymentId && (
+                  <span className="text-xs text-gray-400">ID: {order.paymentId.slice(-8).toUpperCase()}</span>
+                )}
               </div>
             </div>
           );

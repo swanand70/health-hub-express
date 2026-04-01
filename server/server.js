@@ -6,6 +6,7 @@ require("dotenv").config();
 const medicineRoutes = require("./routes/medicineRoutes");
 const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get("/health", (req, res) => {
 app.use("/api/medicines", medicineRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payment", paymentRoutes);
 
 /* ================= DATABASE ================= */
 mongoose.connect(process.env.MONGO_URI, {

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { getCart, saveCart, clearCart } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import PaymentDialog from '@/components/PaymentDialog';
 import { toast } from 'sonner';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, CreditCard } from 'lucide-react';
 
 const _API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://health-hub-express.onrender.com/api' : 'http://localhost:5000/api');
 const API_URL = _API.includes('/api') ? _API.replace(/\/$/, '') : `${_API.replace(/\/$/, '')}/api`;
@@ -14,6 +15,8 @@ export default function Cart() {
   const [cart, setCartState] = useState(getCart());
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState(user?.address || "");
+  const [showPayment, setShowPayment] = useState(false);
+  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/medicines`)
@@ -54,7 +57,7 @@ export default function Cart() {
     toast.info('Item removed');
   };
 
-  const checkout = async () => {
+  const handleCheckout = async () => {
     if (!user || cartWithDetails.length === 0) return;
     if (!deliveryAddress.trim()) {
       return toast.error("Please provide a delivery address.");
@@ -63,7 +66,7 @@ export default function Cart() {
     setIsCheckingOut(true);
 
     try {
-      // Group by pharmacy because Backend schema handles 1 pharmacy per Order
+      // Group by pharmacy
       const byPharmacy: Record<string, typeof cartWithDetails> = {};
       cartWithDetails.forEach((item: any) => {
         const pid = item.product.pharmacy?._id || item.product.pharmacy || item.pharmacyId;
@@ -71,8 +74,8 @@ export default function Cart() {
         byPharmacy[pid].push(item);
       });
 
-      // Fire order requests for each pharmacy
-      const promises = Object.entries(byPharmacy).map(([pharmacyId, items]) => {
+      // Create orders for each pharmacy
+      const orderPromises = Object.entries(byPharmacy).map(async ([pharmacyId, items]) => {
         const orderPayload = {
           pharmacyId,
           deliveryAddress,
@@ -82,30 +85,70 @@ export default function Cart() {
           }))
         };
 
-        return fetch(`${API_URL}/orders`, {
+        const response = await fetch(`${API_URL}/orders`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify(orderPayload)
-        }).then(res => {
-          if (!res.ok) throw new Error("Order failed for a pharmacy");
-          return res.json();
         });
+
+        if (!response.ok) throw new Error("Order failed for a pharmacy");
+        return response.json();
       });
 
-      await Promise.all(promises);
-
-      clearCart();
-      setCartState([]);
-      toast.success('Sequence Complete! Orders placed successfully.');
+      const orders = await Promise.all(orderPromises);
+      setPendingOrders(orders);
+      
+      // Show payment dialog with total amount
+      setShowPayment(true);
     } catch (err: any) {
       toast.error('Failed to place one or more orders. Check stock.');
       console.error(err);
     } finally {
       setIsCheckingOut(false);
     }
+  };
+
+  const handlePaymentSuccess = async (paymentId: string) => {
+    try {
+      // Update all orders with payment information
+      const updatePromises = pendingOrders.map(order => 
+        fetch(`${API_URL}/payment/verify-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            razorpay_order_id: paymentId,
+            razorpay_payment_id: paymentId,
+            razorpay_signature: 'verified',
+            orderId: order._id
+          })
+        })
+      );
+
+      await Promise.all(updatePromises);
+      
+      // Clear cart after successful payment
+      clearCart();
+      setCartState([]);
+      toast.success(`Payment successful! Payment ID: ${paymentId}`);
+      setShowPayment(false);
+      setPendingOrders([]);
+    } catch (err: any) {
+      toast.error('Payment succeeded but order update failed. Please contact support.');
+      console.error(err);
+    }
+  };
+
+  const handlePaymentFailure = () => {
+    setShowPayment(false);
+    setPendingOrders([]);
+    // Note: Orders are created but payment is pending
+    // You may want to implement a cleanup mechanism for unpaid orders
   };
 
   if (cartWithDetails.length === 0) {
@@ -166,12 +209,30 @@ export default function Cart() {
         </div>
         <Button
           className="bg-teal-600 hover:bg-teal-700 px-8 disabled:opacity-50"
-          onClick={checkout}
+          onClick={handleCheckout}
           disabled={isCheckingOut}
         >
-          {isCheckingOut ? 'Processing...' : 'Place Order'}
+          {isCheckingOut ? (
+            'Processing...'
+          ) : (
+            <>
+              <CreditCard className="h-4 w-4 mr-2" />
+              Pay & Place Order
+            </>
+          )}
         </Button>
       </div>
+
+      {/* Payment Dialog */}
+      {showPayment && (
+        <PaymentDialog
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+          amount={total}
+          onSuccess={handlePaymentSuccess}
+          onFailure={handlePaymentFailure}
+        />
+      )}
     </div>
   );
 }
